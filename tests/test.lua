@@ -5,11 +5,11 @@
 TOTAL_FIELDS = 40
 TOTAL_ROWS = 40 --unused
 
-DEFINITION_STRING_TYPE_NAME = "text"
-QUERYING_STRING_TYPE_NAME = "text"
+DEFINITION_STRING_TYPE_NAME = "char(50)"
+QUERYING_STRING_TYPE_NAME = "string"
 
-CREATE_TABLE_RETURN_VALUE = 0
-DROP_TABLE_RETURN_VALUE = 0
+CREATE_TABLE_RETURN_VALUE = -1
+DROP_TABLE_RETURN_VALUE = -1
 
 MSG_CURSOR_NOT_CLOSED = "cursor was not automatically closed by fetch"
 
@@ -618,9 +618,10 @@ datasource = arg[2] or "luasql-test"
 username = arg[3] or nil
 password = arg[4] or nil
 
+local DIRSEP = package.config and package.config:sub(1,1) or '/'
 -- Loading driver specific functions
 if arg[0] then
-	local path = string.gsub (arg[0], "^(.*%/)[^/]*$", "%1")
+	local path = string.gsub (arg[0], "^(.*%" .. DIRSEP .. ")[^"..DIRSEP .."]*$", "%1")
 	if path == "test.lua" then
 		path = ""
 	end
@@ -644,7 +645,7 @@ tests = {
 	{ "fetch many", fetch_many },
 	{ "rollback", rollback },
 	{ "get column information", column_info },
-	{ "escape", escape },
+	-- { "escape", escape },
 	{ "extensions", extensions_test },
 	{ "close objects", check_close },
 	{ "drop table", drop_table },
