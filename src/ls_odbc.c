@@ -1709,13 +1709,15 @@ static int conn_execute (lua_State *L) {
     SQLHSTMT hstmt;
     SQLSMALLINT numcols;
     SQLRETURN ret;
+    int no_data;
     ret = SQLAllocHandle(hSTMT, hdbc, &hstmt);
     if (error(ret))
         return fail(L, hDBC, hdbc);
 
     /* execute the statement */
     ret = SQLExecDirect (hstmt, (char *) statement, SQL_NTS);
-    if (error(ret)) {
+    no_data = (ret == LUASQL_ODBC3_C(SQL_NO_DATA,SQL_NO_DATA_FOUND))?1:0;
+    if ((error(ret))&&(!no_data)) {
         ret = fail(L, hSTMT, hstmt);
         SQLFreeHandle(hSTMT, hstmt);
         return ret;
@@ -1734,12 +1736,14 @@ static int conn_execute (lua_State *L) {
         return cur_create (L, 1, conn, hstmt, numcols);
     else {
         /* if action has no results (e.g., UPDATE) */
-        SQLINTEGER numrows;
-        ret = SQLRowCount(hstmt, &numrows);
-        if (error(ret)) {
-            ret = fail(L, hSTMT, hstmt);
-            SQLFreeHandle(hSTMT, hstmt);
-            return ret;
+        SQLINTEGER numrows = 0;
+        if(!no_data){
+            ret = SQLRowCount(hstmt, &numrows);
+            if (error(ret)) {
+                ret = fail(L, hSTMT, hstmt);
+                SQLFreeHandle(hSTMT, hstmt);
+                return ret;
+            }
         }
         lua_pushnumber(L, numrows);
         SQLFreeHandle(hSTMT, hstmt);
